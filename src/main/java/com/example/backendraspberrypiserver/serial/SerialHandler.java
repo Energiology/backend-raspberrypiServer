@@ -63,7 +63,7 @@ public class SerialHandler {
                 }
             } catch (IOException e) {
                 log.info("readSerial method end..");
-
+                log.info(e.getLocalizedMessage());
                 throw new RuntimeException(e);
             }
         }
