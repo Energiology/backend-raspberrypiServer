@@ -1,0 +1,12 @@
+package com.example.backendraspberrypiserver.stomp.dto;
+
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter
+@Setter
+public class PowerDataToCentralServerList {
+    private List<PowerDataToCentralServer> powerDataList;
+}
