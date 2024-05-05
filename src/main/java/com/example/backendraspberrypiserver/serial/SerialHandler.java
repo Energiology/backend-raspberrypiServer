@@ -30,7 +30,7 @@ public class SerialHandler {
             return;
         }
 
-        SerialPort serialPort = commPorts[1];
+        SerialPort serialPort = commPorts[0];
 
         int baudRate = 9600;
         int dataBits = 8;
