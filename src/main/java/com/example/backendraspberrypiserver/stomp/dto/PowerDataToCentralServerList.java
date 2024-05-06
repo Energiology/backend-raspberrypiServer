@@ -9,4 +9,6 @@ import java.util.List;
 @Setter
 public class PowerDataToCentralServerList {
     private List<PowerDataToCentralServer> powerDataList;
+
+
 }

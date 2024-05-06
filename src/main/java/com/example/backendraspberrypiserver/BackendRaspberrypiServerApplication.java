@@ -1,5 +1,6 @@
 package com.example.backendraspberrypiserver;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.boot.SpringApplication;
@@ -21,5 +22,10 @@ public class BackendRaspberrypiServerApplication {
 		mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
 		return mapper;
+	}
+
+	@Bean
+	public ObjectMapper objectMapper() {
+		return new ObjectMapper();
 	}
 }

@@ -1,5 +1,6 @@
 package com.example.backendraspberrypiserver.stomp;
 
+import com.example.backendraspberrypiserver.serial.application.dto.ArduinoPowerData;
 import com.example.backendraspberrypiserver.serial.application.dto.PowerData;
 import com.example.backendraspberrypiserver.stomp.dto.PowerDataToCentralServerList;
 import com.example.backendraspberrypiserver.stomp.dto.PowerDataToCentralServer;
@@ -21,12 +22,12 @@ public class Test {
         List<PowerDataToCentralServer> powerDataList = new ArrayList<>();
         PowerDataToCentralServerList myPowerDataList = new PowerDataToCentralServerList();
 
-        PowerData powerData1 = new PowerData();
-        powerData1.setPortId(1L);
+        ArduinoPowerData powerData1 = new ArduinoPowerData();
+        powerData1.setPortNum(1L);
         powerData1.setPower(1.1);
 
-        PowerData powerData2 = new PowerData();
-        powerData2.setPortId(2L);
+        ArduinoPowerData powerData2 = new ArduinoPowerData();
+        powerData2.setPortNum(2L);
         powerData2.setPower(2.2);
 
         PowerDataToCentralServer powerDataToCentralServer1 = mapper.map(powerData1, PowerDataToCentralServer.class);
