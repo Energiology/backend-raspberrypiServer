@@ -44,7 +44,7 @@ public class SerialHandler {
             return;
         }
 
-        SerialPort serialPort = commPorts[1];
+        SerialPort serialPort = commPorts[0];
 
         int baudRate = 9600;
         int dataBits = 8;
@@ -80,7 +80,7 @@ public class SerialHandler {
                 }
             } catch (IOException e) {
                 log.info("readSerial method end..");
-
+                log.info(e.getLocalizedMessage());
                 throw new RuntimeException(e);
             } catch (ExecutionException e) {
                 throw new RuntimeException(e);
