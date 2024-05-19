@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,7 +19,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @Component
@@ -27,6 +30,26 @@ import java.util.concurrent.ExecutionException;
 public class SerialHandler {
     private final ObjectMapper objectMapper;
     private String currentPowerSupplier = "battery";
+    private SerialPort serialPort1;
+    private SerialPort serialPort2;
+    private Map<String, Integer> map;
+    List<List<String>> lookUpCommand;
+    @PostConstruct
+    void init(){
+         map = new HashMap<String, Integer>() {{
+            put("BATTERY", 0);
+            put("EXTERNAL", 1);
+            put("OFF", 2);
+        }};
+
+        lookUpCommand = new ArrayList<>();
+        lookUpCommand.add(List.of("tmp"));
+        lookUpCommand.add(List.of("a","b", "c"));
+        lookUpCommand.add(List.of("d","e", "f"));
+        lookUpCommand.add(List.of("g","h", "i"));
+        lookUpCommand.add(List.of("j","k", "l"));
+        lookUpCommand.add(List.of("m","n", "o"));
+    }
 
     @Scheduled(fixedDelay = 2000)
     public void readSerial() throws ExecutionException, InterruptedException, IOException {
@@ -42,20 +65,18 @@ public class SerialHandler {
             return;
         }
 
-        SerialPort serialPort = commPorts[0];
-        setSerialPortProperties(serialPort);
-        setSerialPortEventListener(serialPort);
+        serialPort1 = commPorts[0];
+        setSerialPortProperties(serialPort1);
+        setSerialPortEventListener(serialPort1);
 
-        if (serialPort.openPort()) {
+        if (serialPort1.openPort()) {
             System.out.println("Serial port connection successful");
             // Get the input stream
-            InputStream inputStream = serialPort.getInputStream();
-            OutputStream outputStream = serialPort.getOutputStream();
+            InputStream inputStream = serialPort1.getInputStream();
 
             try {
-                int data;
                 int length;
-                while (SerialPort.getCommPorts().length > 0 && serialPort.isOpen()) {
+                while (SerialPort.getCommPorts().length > 0 && serialPort1.isOpen()) {
                     if (inputStream.available() > 0) {
                         log.info("connect!");
 
@@ -70,19 +91,19 @@ public class SerialHandler {
                     }
                 }
             } catch (IOException e) {
-                serialPort.closePort();
+                serialPort1.closePort();
                 log.info("readSerial method end..");
                 log.info(e.getLocalizedMessage());
                 throw new RuntimeException(e);
             } catch (ExecutionException e) {
-            serialPort.closePort();
+                serialPort1.closePort();
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
-            serialPort.closePort();
+                serialPort1.closePort();
                 throw new RuntimeException(e);
             }
             finally {
-                serialPort.closePort();
+                serialPort1.closePort();
             }
 
         }else{
@@ -109,22 +130,19 @@ public class SerialHandler {
             return;
         }
 
-        SerialPort serialPort = commPorts[0];
+        serialPort2 = commPorts[0];
+        setSerialPortProperties(serialPort2);
+        setSerialPortEventListener(serialPort2);
 
-        setSerialPortProperties(serialPort);
-        setSerialPortEventListener(serialPort);
-
-        if (serialPort.openPort()) {
+        if (serialPort2.openPort()) {
             System.out.println("Serial port connection successful");
 
             // Get the input stream
-            InputStream inputStream = serialPort.getInputStream();
-            OutputStream outputStream = serialPort.getOutputStream();
+            InputStream inputStream = serialPort2.getInputStream();
 
             try {
-                int data;
                 int length;
-                while (SerialPort.getCommPorts().length > 0 && serialPort.isOpen()) {
+                while (SerialPort.getCommPorts().length > 0 && serialPort2.isOpen()) {
                     if (inputStream.available() > 0) {
                         byte[] buffer = new byte[2048];
                         length = inputStream.read(buffer);
@@ -144,6 +162,8 @@ public class SerialHandler {
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
+            }finally {
+                serialPort2.closePort();
             }
         }
 
@@ -200,4 +220,50 @@ public class SerialHandler {
             }
         });
     }
+
+    public String requestToArduino(Long portId,  String command){
+        SerialPort serialPort = serialPort1;
+        String commandCode = mapToCommandCode(portId, command);
+
+        if (serialPort.isOpen() || serialPort.openPort()) {
+            try {
+                // commandCode에 개행 문자 추가하여 명령의 끝을 나타냄
+                String fullCommand = commandCode + "\n";
+                byte[] commandBytes = fullCommand.getBytes(StandardCharsets.UTF_8);
+
+                serialPort.writeBytes(commandBytes, commandBytes.length);
+                log.info("Command sent to Arduino: " + fullCommand);
+
+                return "Command sent successfully";
+            } catch (Exception e) {
+                log.error("Error sending command to Arduino", e);
+                return "Error sending command: " + e.getMessage();
+            }
+        } else {
+            String errorMessage = "Failed to open serial port";
+            log.error(errorMessage);
+            return errorMessage;
+        }
+    }
+
+
+    /**
+     *
+     * @param portId
+     * @return serialPort
+     */
+//    private SerialPort mapToSerial(Long portId){
+//        if (portId <= 3)
+//            return serialPort1;
+//        else if (portId <= 5)
+//            return serialPort2;
+//
+//        throw new IllegalArgumentException("유효하지 않은  portId 입니다");
+//    }
+
+    private String mapToCommandCode(Long portId, String command){
+        Integer idx = map.get(command);
+        return lookUpCommand.get(portId.intValue()).get(idx);
+    }
+
 }

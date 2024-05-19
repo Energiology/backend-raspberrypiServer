@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
@@ -15,10 +14,9 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
-@Component
 public class StompHandler {
     private StompSession stompSession;
-    public final String WEB_SOCKET_URL = "ws://localhost:8080/raspberrypi-websocket";
+    public final String WEB_SOCKET_URL = "ws://43.201.143.122:8080/raspberrypi-websocket";
 
     StompSession connect(final String webSocketURL) throws ExecutionException, InterruptedException {
         // WebSocket 연결을 위한 WebSocketClient 생성
@@ -35,8 +33,7 @@ public class StompHandler {
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
-        String url = "ws://localhost:8080/raspberrypi-websocket";
-        StompSession session = stompClient.connect(url, new StompSessionHandlerAdapter() {}).get();
+        StompSession session = stompClient.connect(WEB_SOCKET_URL, new StompSessionHandlerAdapter() {}).get();
         this.stompSession = session;
         return session;
     }
