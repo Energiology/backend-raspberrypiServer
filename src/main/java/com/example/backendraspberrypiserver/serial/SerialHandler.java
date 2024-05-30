@@ -78,7 +78,6 @@ public class SerialHandler {
                 int length;
                 while (SerialPort.getCommPorts().length > 0 && serialPort1.isOpen()) {
                     if (inputStream.available() > 0) {
-                        log.info("connect!");
 
                         byte[] buffer = new byte[2048];
                         length = inputStream.read(buffer);
@@ -113,7 +112,7 @@ public class SerialHandler {
         log.info("readSerial method end..");
     }
 
-    //    @Scheduled(fixedDelay = 2000)
+    @Scheduled(fixedDelay = 2000)
     public void readSerial2() {
         StompHandler stompHandler = new StompHandler();
 
@@ -130,7 +129,7 @@ public class SerialHandler {
             return;
         }
 
-        serialPort2 = commPorts[0];
+        serialPort2 = commPorts[1];
         setSerialPortProperties(serialPort2);
         setSerialPortEventListener(serialPort2);
 

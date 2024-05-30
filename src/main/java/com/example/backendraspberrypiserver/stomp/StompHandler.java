@@ -16,7 +16,8 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class StompHandler {
     private StompSession stompSession;
-    public final String WEB_SOCKET_URL = "ws://43.201.143.122:8080/raspberrypi-websocket";
+//    public final String WEB_SOCKET_URL = "ws://43.201.143.122:8080/raspberrypi-websocket";
+    public final String WEB_SOCKET_URL = "ws://localhost:8080/raspberrypi-websocket";
 
     StompSession connect(final String webSocketURL) throws ExecutionException, InterruptedException {
         // WebSocket 연결을 위한 WebSocketClient 생성
