@@ -4,6 +4,7 @@ import com.example.backendraspberrypiserver.serial.application.dto.ArduinoPowerD
 import com.example.backendraspberrypiserver.stomp.StompHandler;
 import com.example.backendraspberrypiserver.stomp.dto.PowerDataToCentralServer;
 import com.example.backendraspberrypiserver.stomp.dto.PowerDataToCentralServerList;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fazecast.jSerialComm.SerialPort;
@@ -52,10 +53,9 @@ public class SerialHandler {
     }
 
     @Scheduled(fixedDelay = 2000)
-    public void readSerial() throws ExecutionException, InterruptedException, IOException {
+    public void readSerial() throws IOException {
         String[] args = {};
 
-//        Test.main(args);
         StompHandler stompHandler = new StompHandler();
 
         SerialPort[] commPorts = SerialPort.getCommPorts();
@@ -64,6 +64,7 @@ public class SerialHandler {
             log.error("System has no Serial Port");
             return;
         }
+
 
         serialPort1 = commPorts[0];
         setSerialPortProperties(serialPort1);
@@ -74,37 +75,32 @@ public class SerialHandler {
             // Get the input stream
             InputStream inputStream = serialPort1.getInputStream();
 
-            try {
-                int length;
-                while (SerialPort.getCommPorts().length > 0 && serialPort1.isOpen()) {
-                    if (inputStream.available() > 0) {
+            int length;
+            while (SerialPort.getCommPorts().length > 0 && serialPort1.isOpen()) {
+                if (inputStream.available() > 0) {
 
-                        byte[] buffer = new byte[2048];
-                        length = inputStream.read(buffer);
+                    byte[] buffer = new byte[2048];
+                    length = inputStream.read(buffer);
 
-                        String receivedString = new String(buffer, 0, length, StandardCharsets.UTF_8); // 바이트를 문자열로 변환
-                        log.info("\n" + "time :" + LocalDateTime.now() + "\n" + "Received data: \n" + receivedString);
+                    String receivedString = new String(buffer, 0, length, StandardCharsets.UTF_8); // 바이트를 문자열로 변환
+                    log.info("\n" + "time :" + LocalDateTime.now() + "\n" + "Received data: \n" + receivedString);
 
-                        PowerDataToCentralServerList powerDataToCentralServerList = convertToSendData(receivedString);
+                    PowerDataToCentralServerList powerDataToCentralServerList = null;
+                    try{
+                         powerDataToCentralServerList = convertToSendData(receivedString);
+                    } catch (JsonProcessingException e){
+                        log.error(e.toString());
+                    }
+
+                    try {
                         stompHandler.sendData(powerDataToCentralServerList);
+                    } catch (ExecutionException e) {
+                        throw new RuntimeException(e);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
                     }
                 }
-            } catch (IOException e) {
-                serialPort1.closePort();
-                log.info("readSerial method end..");
-                log.info(e.getLocalizedMessage());
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
-                serialPort1.closePort();
-                throw new RuntimeException(e);
-            } catch (InterruptedException e) {
-                serialPort1.closePort();
-                throw new RuntimeException(e);
             }
-            finally {
-                serialPort1.closePort();
-            }
-
         }else{
             log.info("port is closed!");
         }
@@ -113,7 +109,7 @@ public class SerialHandler {
     }
 
     @Scheduled(fixedDelay = 2000)
-    public void readSerial2() {
+    public void readSerial2() throws IOException {
         StompHandler stompHandler = new StompHandler();
 
         log.info("readSerial2222 method Start..");
@@ -138,31 +134,33 @@ public class SerialHandler {
 
             // Get the input stream
             InputStream inputStream = serialPort2.getInputStream();
+            int length;
+            while (SerialPort.getCommPorts().length > 0 && serialPort2.isOpen()) {
+                if (inputStream.available() > 0) {
 
-            try {
-                int length;
-                while (SerialPort.getCommPorts().length > 0 && serialPort2.isOpen()) {
-                    if (inputStream.available() > 0) {
-                        byte[] buffer = new byte[2048];
-                        length = inputStream.read(buffer);
+                    byte[] buffer = new byte[2048];
+                    length = inputStream.read(buffer);
 
-                        String receivedString = new String(buffer, 0, length, StandardCharsets.UTF_8); // 바이트를 문자열로 변환
-                        log.info("\n" + "time: " + LocalDateTime.now() + "\n" + "Received data: \n" + receivedString);
+                    String receivedString = new String(buffer, 0, length, StandardCharsets.UTF_8); // 바이트를 문자열로 변환
+                    log.info("\n" + "time :" + LocalDateTime.now() + "\n" + "Received data: \n" + receivedString);
 
-                        PowerDataToCentralServerList powerDataToCentralServerList = convertToSendData(receivedString);
+                    PowerDataToCentralServerList powerDataToCentralServerList = null;
+                    try{
+                        powerDataToCentralServerList = convertToSendData(receivedString);
+                    } catch (JsonProcessingException e){
+                        log.error(e.toString());
+                    }
+
+                    try {
                         stompHandler.sendData(powerDataToCentralServerList);
+                    } catch (ExecutionException e) {
+                        serialPort2.closePort();
+                        throw new RuntimeException(e);
+                    } catch (InterruptedException e) {
+                        serialPort2.closePort();
+                        throw new RuntimeException(e);
                     }
                 }
-            } catch (IOException e) {
-                log.info("readSerial method end..");
-                log.info(e.getLocalizedMessage());
-                throw new RuntimeException(e);
-            } catch (ExecutionException e) {
-                throw new RuntimeException(e);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }finally {
-                serialPort2.closePort();
             }
         }
 
@@ -226,9 +224,9 @@ public class SerialHandler {
 
         if (serialPort.isOpen() || serialPort.openPort()) {
             try {
-                // commandCode에 개행 문자 추가하여 명령의 끝을 나타냄
-                String fullCommand = commandCode + "\n";
-                byte[] commandBytes = fullCommand.getBytes(StandardCharsets.UTF_8);
+                String fullCommand = commandCode;
+                char charCode = commandCode.charAt(0);
+                byte[] commandBytes = new byte[] {(byte) charCode};
 
                 serialPort.writeBytes(commandBytes, commandBytes.length);
                 log.info("Command sent to Arduino: " + fullCommand);
@@ -244,21 +242,6 @@ public class SerialHandler {
             return errorMessage;
         }
     }
-
-
-    /**
-     *
-     * @param portId
-     * @return serialPort
-     */
-//    private SerialPort mapToSerial(Long portId){
-//        if (portId <= 3)
-//            return serialPort1;
-//        else if (portId <= 5)
-//            return serialPort2;
-//
-//        throw new IllegalArgumentException("유효하지 않은  portId 입니다");
-//    }
 
     private String mapToCommandCode(Long portId, String command){
         Integer idx = map.get(command);
