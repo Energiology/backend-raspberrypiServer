@@ -1,5 +1,6 @@
 package com.example.backendraspberrypiserver.serial;
 
+import com.example.backendraspberrypiserver.client.MainServerClient;
 import com.example.backendraspberrypiserver.serial.application.dto.ArduinoPowerData;
 import com.example.backendraspberrypiserver.stomp.StompHandler;
 import com.example.backendraspberrypiserver.stomp.dto.PowerDataToCentralServer;
@@ -35,6 +36,9 @@ public class SerialHandler {
     private SerialPort serialPort2;
     private Map<String, Integer> map;
     List<List<String>> lookUpCommand;
+
+    private final MainServerClient mainServerClient;
+
     @PostConstruct
     void init(){
          map = new HashMap<String, Integer>() {{
@@ -72,6 +76,7 @@ public class SerialHandler {
 
         if (serialPort1.openPort()) {
             System.out.println("Serial port connection successful");
+            mainServerClient.requestInitPortBattery();
             // Get the input stream
             InputStream inputStream = serialPort1.getInputStream();
 

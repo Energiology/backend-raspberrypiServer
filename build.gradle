@@ -29,6 +29,7 @@ dependencies {
 	implementation group: 'com.fazecast', name: 'jSerialComm', version: '2.10.4'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.0' // 사용 중인 Jackson 버전에 맞춰주세요
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.4'
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.1'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
